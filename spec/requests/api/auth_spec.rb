@@ -252,4 +252,199 @@ RSpec.describe 'Api::Auth', type: :request do
       end
     end
   end
+
+  describe 'POST /api/auth/login' do
+    let(:url) { '/api/auth/login' }
+    let!(:user) { create(:user, email: 'john@example.com', password: 'password123', password_confirmation: 'password123') }
+    
+    context 'with valid credentials' do
+      let(:valid_credentials) do
+        {
+          email: 'john@example.com',
+          password: 'password123'
+        }
+      end
+      
+      it 'returns status 200 (ok)' do
+        post url, params: valid_credentials, as: :json
+        
+        expect(response).to have_http_status(:ok)
+      end
+      
+      it 'returns success message' do
+        post url, params: valid_credentials, as: :json
+        
+        json = JSON.parse(response.body)
+        
+        expect(json['message']).to eq('Login realizado com sucesso')
+      end
+      
+      it 'returns user data' do
+        post url, params: valid_credentials, as: :json
+        
+        json = JSON.parse(response.body)
+        
+        expect(json['user']).to include(
+          'id' => user.id,
+          'name' => user.name,
+          'email' => user.email,
+          'created_at' => be_present,
+          'updated_at' => be_present
+        )
+      end
+      
+      it 'returns a JWT token' do
+        post url, params: valid_credentials, as: :json
+        
+        json = JSON.parse(response.body)
+        
+        expect(json['token']).to be_present
+        
+        decoded = JWT.decode(
+          json['token'],
+          Rails.application.secret_key_base,
+          true,
+          { algorithm: 'HS256' }
+        )[0]
+        
+        expect(decoded['user_id']).to eq(user.id)
+        expect(decoded['exp']).to be_present
+        expect(decoded['iat']).to be_present
+      end
+      
+      it 'does not return password_digest' do
+        post url, params: valid_credentials, as: :json
+        
+        json = JSON.parse(response.body)
+        
+        expect(json['user']).not_to have_key('password_digest')
+        expect(json['user']).not_to have_key('password')
+      end
+    end
+    
+    context 'with invalid credentials' do
+      context 'when password is incorrect' do
+        let(:invalid_credentials) do
+          {
+            email: 'john@example.com',
+            password: 'wrong_password'
+          }
+        end
+        
+        it 'returns status 401 (unauthorized)' do
+          post url, params: invalid_credentials, as: :json
+          
+          expect(response).to have_http_status(:unauthorized)
+        end
+        
+        it 'returns generic error message' do
+          post url, params: invalid_credentials, as: :json
+          
+          json = JSON.parse(response.body)
+          
+          expect(json['error']).to eq('Invalid email or password')
+        end
+        
+        it 'does not return token' do
+          post url, params: invalid_credentials, as: :json
+          
+          json = JSON.parse(response.body)
+          
+          expect(json).not_to have_key('token')
+        end
+      end
+      
+      context 'when email does not exist' do
+        let(:invalid_credentials) do
+          {
+            email: 'notfound@example.com',
+            password: 'password123'
+          }
+        end
+        
+        it 'returns status 401 (unauthorized)' do
+          post url, params: invalid_credentials, as: :json
+          
+          expect(response).to have_http_status(:unauthorized)
+        end
+        
+        it 'returns generic error message' do
+          post url, params: invalid_credentials, as: :json
+          
+          json = JSON.parse(response.body)
+          
+          expect(json['error']).to eq('Invalid email or password')
+        end
+      end
+      
+      context 'when email is blank' do
+        it 'returns unauthorized' do
+          post url, params: {
+            email: '',
+            password: 'password123'
+          }, as: :json
+          
+          expect(response).to have_http_status(:unauthorized)
+        end
+      end
+      
+      context 'when password is blank' do
+        it 'returns unauthorized' do
+          post url, params: {
+            email: 'john@example.com',
+            password: ''
+          }, as: :json
+          
+          expect(response).to have_http_status(:unauthorized)
+        end
+      end
+      
+      context 'when both fields are blank' do
+        it 'returns unauthorized' do
+          post url, params: {
+            email: '',
+            password: ''
+          }, as: :json
+          
+          expect(response).to have_http_status(:unauthorized)
+        end
+      end
+    end
+    
+    context 'when user is soft deleted' do
+      it 'does not allow login' do
+        user.destroy  # soft delete
+        
+        post url, params: {
+          email: 'john@example.com',
+          password: 'password123'
+        }, as: :json
+        
+        expect(response).to have_http_status(:unauthorized)
+        
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('Invalid email or password')
+      end
+    end
+    
+    context 'case sensitivity' do
+      it 'is case sensitive for email' do
+        post url, params: {
+          email: 'JOHN@EXAMPLE.COM',  # uppercase
+          password: 'password123'
+        }, as: :json
+        
+        expect(response).to have_http_status(:unauthorized)
+      end
+      
+      it 'is case sensitive for password' do
+        post url, params: {
+          email: 'john@example.com',
+          password: 'PASSWORD123'  # uppercase
+        }, as: :json
+        
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end

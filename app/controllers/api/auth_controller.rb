@@ -8,7 +8,6 @@ class Api::AuthController < ApplicationController
         user: user_response(user),
         token: token
       }, status: :created
-      
     else
       render json: { 
         errors: user.errors.full_messages 
@@ -16,10 +15,32 @@ class Api::AuthController < ApplicationController
     end
   end
 
+  def login
+    user = User.find_by(email: login_params[:email])
+    if user&.authenticate(login_params[:password])
+      token = encode_token(user_id: user.id, exp: 24.hours.from_now.to_i)
+      render json: {
+        message: 'Login realizado com sucesso',
+        user: user_response(user),
+        token: token
+      }, status: :ok
+    else
+      render json: {
+        error: 'Invalid email or password'
+      }, status: :unauthorized
+    end
+  end
+
   private
+
   def user_params
     params.permit(:name, :email, :password, :password_confirmation)
   end
+  
+  def login_params
+    params.permit(:email, :password)
+  end
+  
   def user_response(user)
     {
       id: user.id,
