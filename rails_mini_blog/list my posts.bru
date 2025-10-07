@@ -1,0 +1,19 @@
+meta {
+  name: list my posts
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{BASE_URL}}/api/posts/my_posts
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{JWT_TOKEN}}
+}
+
+settings {
+  encodeUrl: true
+}

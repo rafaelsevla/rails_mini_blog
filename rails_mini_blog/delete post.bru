@@ -1,0 +1,19 @@
+meta {
+  name: delete post
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{BASE_URL}}/api/posts/2
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{JWT_TOKEN}}
+}
+
+settings {
+  encodeUrl: true
+}

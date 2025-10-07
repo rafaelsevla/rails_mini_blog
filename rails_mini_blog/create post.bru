@@ -1,0 +1,27 @@
+meta {
+  name: create post
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{BASE_URL}}/api/posts
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{JWT_TOKEN}}
+}
+
+body:json {
+  
+  {
+    "title": "My Second Post",
+    "content": "This is the content of my first post. It needs at least 10 characters."
+  }
+}
+
+settings {
+  encodeUrl: true
+}
