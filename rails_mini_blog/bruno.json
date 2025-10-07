@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "rails_mini_blog",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
