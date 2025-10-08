@@ -1,24 +1,41 @@
-# README
+# Mini Blog - Ruby on Rails
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Este repositório é um projeto de estudo em **Ruby on Rails** que implementa um mini blog com funcionalidades básicas de autenticação e CRUD de posts.
 
-Things you may want to cover:
+## Funcionalidades
 
-* Ruby version
+- CRUD de posts protegido por autenticação.
+- Visualização de posts de outros usuários.
+- Autenticação e login de usuários.
+- Testes automatizados com **RSpec**.
+- Este projeto também inclui o Bruno, uma ferramenta criada para testar a API de forma prática.
 
-* System dependencies
+## Pré-requisitos
 
-* Configuration
+- Ruby
+- Rails
+- Docker e Docker Compose
+- Bundler
 
-* Database creation
+## Como rodar o projeto
 
-* Database initialization
+1. Suba o banco de dados usando Docker Compose:
 
-* How to run the test suite
+```bash
+docker-compose up -d
+```
 
-* Services (job queues, cache servers, search engines, etc.)
+2. Instale as dependências do projeto:
+```bash
+bundle install
+```
 
-* Deployment instructions
+3. Para rodar os testes com RSpec:
+```bash
+rspec
+```
 
-* ...
+4. Execute o servidor Rails:
+```bash
+rails s
+```
